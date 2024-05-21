@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/test.dir/control_mavsdk.cpp.o -o test 

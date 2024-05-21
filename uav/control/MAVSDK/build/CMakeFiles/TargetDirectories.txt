@@ -1,0 +1,3 @@
+/home/alrshdn/devel/STAD/uav/control/MAVSDK/build/CMakeFiles/control_mavsdk.dir
+/home/alrshdn/devel/STAD/uav/control/MAVSDK/build/CMakeFiles/edit_cache.dir
+/home/alrshdn/devel/STAD/uav/control/MAVSDK/build/CMakeFiles/rebuild_cache.dir
