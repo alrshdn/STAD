@@ -99,21 +99,21 @@ control_drone_takeoff(ControlHandle *handle)
 
 
 
-    auto in_air_promise = std::promise<void>{};
-    auto in_air_future = in_air_promise.get_future();
-    Telemetry::LandedStateHandle state_handle = handle->telemetry->subscribe_landed_state(
-        [&](Telemetry::LandedState state) {
-            if (state == Telemetry::LandedState::InAir) {
-                std::cout << "Taking off has finished\n.";
-                handle->telemetry->unsubscribe_landed_state(state_handle);
-                in_air_promise.set_value();
-            }
-        });
-    in_air_future.wait_for(seconds(10));
-    if (in_air_future.wait_for(seconds(3)) == std::future_status::timeout) {
-        std::cerr << "Takeoff timed out.\n";
-        return 0;
-    }
+	auto in_air_promise = std::promise<void>{};
+	auto in_air_future = in_air_promise.get_future();
+	Telemetry::LandedStateHandle state_handle = handle->telemetry->subscribe_landed_state(
+	[&](Telemetry::LandedState state) {
+		if (state == Telemetry::LandedState::InAir) {
+			std::cout << "Taking off has finished\n.";
+			handle->telemetry->unsubscribe_landed_state(state_handle);
+			in_air_promise.set_value();
+		}
+	});
+	in_air_future.wait_for(seconds(10));
+	if (in_air_future.wait_for(seconds(3)) == std::future_status::timeout) {
+		std::cerr << "Takeoff timed out.\n";
+		return 0;
+	}
 
 
 //	auto in_air_promise = std::promise<void>{};
@@ -150,7 +150,11 @@ control_drone_land(ControlHandle *handle)
 		return 0;
 	}
 	
-	sleep_for(seconds(1));
+	/* check if still in air */
+	while (handle->telemetry->in_air()) {
+		std::cout << "Vehicle is landing...\n";
+		sleep_for(seconds(1));
+	}
 
 	std::cout << "[LOG] Landed successfully." << std::endl;
 
@@ -263,6 +267,15 @@ control_drone_set_velocity_body(ControlHandle *handle,
 void
 control_finalize(ControlHandle *handle)
 {
+	/* disarming */
+	std::cout << "[LOG] Disarming..." << std::endl;
+	const Action::Result action_result = handle->action->disarm();
+	if (action_result != Action::Result::Success) {
+		std::cerr << "[ERROR] Disarming failed: " << action_result << std::endl;
+		return;
+	}
+	std::cout << "[LOG] Disarmed successfully!\n";
+
 	delete(handle->action);
 	delete(handle->offboard);
 	delete(handle->telemetry);
